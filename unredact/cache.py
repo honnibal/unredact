@@ -24,6 +24,11 @@ class CacheResult:
     present: bool
 
 
+def _to_archive_url(url: str) -> str:
+    """Convert a URL to an archive.org Wayback Machine URL."""
+    return f"https://web.archive.org/web/{url}"
+
+
 def validate_url(url: str, *, allowed_domains: list[str] | None = None) -> None:
     """Raise ValueError if url is not a valid HTTP(S) URL with a host and path.
 
@@ -132,10 +137,8 @@ def ensure_in_cache(url: str, settings: Settings) -> CacheResult:
         google.api_core.exceptions.Forbidden: If the service account lacks
             permission to read/write the bucket.
         google.api_core.exceptions.NotFound: If the bucket does not exist.
-        urllib.error.URLError: If the source URL cannot be reached (DNS
-            failure, connection refused, timeout).
-        urllib.error.HTTPError: If the source server returns an error
-            status (404, 403, 500, etc.). Subclass of URLError.
+        httpx.RequestError: If the source URL cannot be reached.
+        httpx.HTTPStatusError: If the source server returns an error status.
     """
     result = check_cache(url, settings)
     if result.present:
@@ -144,9 +147,10 @@ def ensure_in_cache(url: str, settings: Settings) -> CacheResult:
     bucket_name = _bucket_name(settings)
     blob_path = url_to_blob_path(url)
 
-    # Download from source
+    # Download from archive.org (justice.gov requires age verification)
+    archive_url = _to_archive_url(url)
     with httpx.Client(follow_redirects=True) as http:
-        response = http.get(url)
+        response = http.get(archive_url)
         response.raise_for_status()
         data = response.content
 
@@ -167,9 +171,9 @@ def fetch_pdf(url: str, settings: Settings) -> bytes:
     """Fetch PDF bytes, reading from GCS cache when available.
 
     If storage_bucket is configured, checks the cache first and reads
-    from GCS if present. On a cache miss, downloads from the source URL
+    from GCS if present. On a cache miss, downloads from archive.org
     and stores in GCS for next time. If storage_bucket is not configured,
-    downloads directly from the source URL.
+    downloads directly from archive.org (to bypass justice.gov age verification).
 
     Args:
         url: The source URL of the PDF.
@@ -180,8 +184,8 @@ def fetch_pdf(url: str, settings: Settings) -> bytes:
 
     Raises:
         ValueError: If the URL is not a valid HTTP(S) URL with a host and path.
-        urllib.error.URLError: If the source URL cannot be reached.
-        urllib.error.HTTPError: If the source server returns an error status.
+        httpx.RequestError: If the source URL cannot be reached.
+        httpx.HTTPStatusError: If the source server returns an error status.
         google.auth.exceptions.DefaultCredentialsError: If GCS is configured
             but credentials are missing.
         google.api_core.exceptions.Forbidden: If the service account lacks
@@ -190,8 +194,9 @@ def fetch_pdf(url: str, settings: Settings) -> bytes:
     validate_url(url)
 
     if not settings.storage_bucket:
+        archive_url = _to_archive_url(url)
         with httpx.Client(follow_redirects=True) as http:
-            response = http.get(url)
+            response = http.get(archive_url)
             response.raise_for_status()
             return response.content
 
@@ -205,9 +210,10 @@ def fetch_pdf(url: str, settings: Settings) -> bytes:
     if blob.exists():
         return blob.download_as_bytes()
 
-    # Cache miss: download from source, store in GCS
+    # Cache miss: download from archive.org, store in GCS
+    archive_url = _to_archive_url(url)
     with httpx.Client(follow_redirects=True) as http:
-        response = http.get(url)
+        response = http.get(archive_url)
         response.raise_for_status()
         data = response.content
 
