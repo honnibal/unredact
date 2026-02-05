@@ -169,7 +169,7 @@ class TestEnsureInCache:
 
         result = ensure_in_cache("https://example.com/file.pdf", self._settings())
 
-        mock_httpx.get.assert_called_once_with("https://example.com/file.pdf")
+        mock_httpx.get.assert_called_once_with("https://web.archive.org/web/https://example.com/file.pdf")
         mock_blob.upload_from_string.assert_called_once_with(
             b"%PDF-fake-content", content_type="application/pdf"
         )
