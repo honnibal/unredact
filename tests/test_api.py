@@ -1,0 +1,86 @@
+"""Tests for the API endpoints."""
+
+from unittest.mock import MagicMock, patch
+
+import pytest
+from fastapi.testclient import TestClient
+
+from unredact.api import app, lifespan
+
+
+@pytest.fixture(scope="module")
+def client():
+    """Test client with lifespan initialized."""
+    with TestClient(app) as c:
+        yield c
+
+
+class TestFontsByUrl:
+    """Test the POST /fonts/by-url endpoint."""
+
+    def test_rejects_disallowed_domain(self, client):
+        resp = client.post("/fonts/by-url", json={"url": "https://evil.com/file.pdf"})
+        assert resp.status_code == 400
+        assert "not in the allowed list" in resp.json()["detail"]
+
+    def test_rejects_invalid_url(self, client):
+        resp = client.post("/fonts/by-url", json={"url": "not-a-url"})
+        assert resp.status_code == 400
+
+    def test_rejects_missing_url(self, client):
+        resp = client.post("/fonts/by-url", json={})
+        assert resp.status_code == 422
+
+    @patch("unredact.api.fetch_pdf")
+    def test_returns_font_info(self, mock_fetch, client):
+        # Use a real small PDF with text
+        import fitz
+
+        doc = fitz.open()
+        page = doc.new_page()
+        page.insert_text((50, 50), "Hello", fontname="helv", fontsize=12)
+        pdf_bytes = doc.tobytes()
+        doc.close()
+
+        mock_fetch.return_value = pdf_bytes
+
+        resp = client.post(
+            "/fonts/by-url",
+            json={"url": "https://www.justice.gov/epstein/files/test.pdf"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["url"] == "https://www.justice.gov/epstein/files/test.pdf"
+        assert len(data["spans"]) >= 1
+
+        span = data["spans"][0]
+        assert "text" in span
+        assert "font" in span
+        assert "page" in span
+        assert "bbox" in span
+        assert span["font"]["size"] == 12
+
+    @patch("unredact.api.fetch_pdf")
+    def test_fetch_error_returns_502(self, mock_fetch, client):
+        from urllib.error import URLError
+
+        mock_fetch.side_effect = URLError("connection refused")
+
+        resp = client.post(
+            "/fonts/by-url",
+            json={"url": "https://www.justice.gov/epstein/files/missing.pdf"},
+        )
+        assert resp.status_code == 502
+        assert "Failed to fetch PDF" in resp.json()["detail"]
+
+    def test_allows_justice_gov(self, client):
+        """justice.gov and www.justice.gov should both be allowed domains."""
+        # We just check validation passes (will fail on fetch, not on domain)
+        with patch("unredact.api.fetch_pdf", return_value=b"%PDF-1.0"):
+            # Empty PDF will return empty spans, that's fine
+            with patch("unredact.api.extract_font_info", return_value=[]):
+                resp = client.post(
+                    "/fonts/by-url",
+                    json={"url": "https://justice.gov/epstein/files/test.pdf"},
+                )
+                assert resp.status_code == 200
