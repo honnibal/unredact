@@ -7,7 +7,7 @@ import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from .cache import fetch_pdf, validate_url
 from .pdf_info import FontInfo, TextSpan, extract_font_info
@@ -47,13 +47,24 @@ def index():
 
 
 class WidthRequest(BaseModel):
-    """Request to calculate text widths."""
+    """Request to calculate text widths.
+
+    Strings are automatically stripped of leading/trailing whitespace.
+    Width calculations for strings with trailing spaces are unreliable
+    due to variable word-spacing in PDFs.
+    """
 
     strings: list[str]
     font: FontT = "times new roman"
     size: int = 12
     kerning: bool = True
     ligatures: bool = True
+
+    @field_validator("strings")
+    @classmethod
+    def strip_whitespace(cls, v: list[str]) -> list[str]:
+        """Strip leading/trailing whitespace from all strings."""
+        return [s.strip() for s in v]
 
 
 class WidthResult(BaseModel):

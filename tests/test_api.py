@@ -84,3 +84,44 @@ class TestFontsByUrl:
                     json={"url": "https://justice.gov/epstein/files/test.pdf"},
                 )
                 assert resp.status_code == 200
+
+
+class TestWidths:
+    """Test the POST /widths endpoint."""
+
+    def test_calculates_width(self, client):
+        resp = client.post("/widths", json={"strings": ["Hello"]})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data["results"]) == 1
+        assert data["results"][0]["text"] == "Hello"
+        assert data["results"][0]["width"] > 0
+
+    def test_strips_whitespace(self, client):
+        """Strings with leading/trailing whitespace should be stripped."""
+        resp = client.post("/widths", json={"strings": ["  Hello  ", "World  ", "  Test"]})
+        assert resp.status_code == 200
+        data = resp.json()
+        texts = [r["text"] for r in data["results"]]
+        assert texts == ["Hello", "World", "Test"]
+
+    def test_multiple_strings(self, client):
+        resp = client.post("/widths", json={"strings": ["A", "AB", "ABC"]})
+        assert resp.status_code == 200
+        data = resp.json()
+        widths = [r["width"] for r in data["results"]]
+        # Widths should increase with string length
+        assert widths[0] < widths[1] < widths[2]
+
+    def test_font_parameter(self, client):
+        resp = client.post("/widths", json={"strings": ["Test"], "font": "arial"})
+        assert resp.status_code == 200
+        assert resp.json()["font"] == "arial"
+
+    def test_size_parameter(self, client):
+        resp_small = client.post("/widths", json={"strings": ["Test"], "size": 10})
+        resp_large = client.post("/widths", json={"strings": ["Test"], "size": 20})
+        assert resp_small.status_code == 200
+        assert resp_large.status_code == 200
+        # Larger size should produce larger width
+        assert resp_large.json()["results"][0]["width"] > resp_small.json()["results"][0]["width"]
