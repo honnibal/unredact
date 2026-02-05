@@ -111,6 +111,7 @@
     <input type="text" id="string-input" placeholder="Type a name and press Enter">
     <button onclick="addFromInput()">Add</button>
     <button class="secondary" onclick="togglePaste()">Paste list</button>
+    <button class="secondary" onclick="clearAllNames()">Clear all</button>
   </div>
   <div class="paste-area" id="paste-area">
     <textarea id="paste-input" placeholder="Paste multiple names, one per line"></textarea>
@@ -138,7 +139,32 @@
 
 <script>
 // --- State ---
-const candidates = [];
+const DEFAULT_NAMES = [
+  'Jeffrey Epstein',
+  'Ghislaine Maxwell',
+  'Alan Dershowitz',
+  'Bill Clinton',
+  'Donald Trump',
+  'Prince Andrew',
+  'Virginia Giuffre',
+  'Virginia Roberts',
+  'Jean-Luc Brunel',
+  'Sarah Kellen',
+  'Nadia Marcinkova',
+  'Les Wexner',
+  'Glenn Dubin',
+  'Eva Dubin',
+  'Bill Richardson',
+  'George Mitchell',
+  'Leon Black',
+  'Mort Zuckerman',
+  'Emmy Tayler',
+  'Lesley Groff',
+  'Adriana Ross',
+  'Juan Alessi',
+  'Alfredo Rodriguez',
+];
+const candidates = [...DEFAULT_NAMES];
 let candidateWidths = {};
 let redactions = [];
 let detectedFont = null;
@@ -172,6 +198,8 @@ fetch('/fonts').then(r => r.json()).then(fonts => {
     fontEl.appendChild(opt);
   });
   if (fonts.includes('times new roman')) fontEl.value = 'times new roman';
+  // Calculate widths for pre-populated names
+  recalculate();
 });
 
 urlEl.addEventListener('keydown', e => {
@@ -285,6 +313,11 @@ function addFromPaste() {
 
 function removeCandidate(idx) {
   candidates.splice(idx, 1);
+  recalculate();
+}
+
+function clearAllNames() {
+  candidates.length = 0;
   recalculate();
 }
 
