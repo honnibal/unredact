@@ -130,9 +130,9 @@ class TestCheckCache:
         mock_blob.exists.return_value = False
         mock_client_cls.return_value.bucket.return_value.blob.return_value = mock_blob
 
-        with patch("unredact.cache.urlopen") as mock_urlopen:
+        with patch("unredact.cache.httpx.Client") as mock_httpx:
             check_cache("https://example.com/file.pdf", self._settings())
-            mock_urlopen.assert_not_called()
+            mock_httpx.assert_not_called()
 
 
 class TestEnsureInCache:
@@ -147,45 +147,47 @@ class TestEnsureInCache:
         mock_blob.exists.return_value = True
         mock_client_cls.return_value.bucket.return_value.blob.return_value = mock_blob
 
-        with patch("unredact.cache.urlopen") as mock_urlopen:
+        with patch("unredact.cache.httpx.Client") as mock_httpx:
             result = ensure_in_cache("https://example.com/file.pdf", self._settings())
-            mock_urlopen.assert_not_called()
+            mock_httpx.assert_not_called()
 
         assert result.present is True
 
     @patch("unredact.cache.storage.Client")
-    @patch("unredact.cache.urlopen")
-    def test_downloads_when_absent(self, mock_urlopen, mock_client_cls):
+    @patch("unredact.cache.httpx.Client")
+    def test_downloads_when_absent(self, mock_httpx_cls, mock_client_cls):
         mock_blob = MagicMock()
         mock_blob.exists.return_value = False
         mock_client_cls.return_value.bucket.return_value.blob.return_value = mock_blob
 
         mock_response = MagicMock()
-        mock_response.read.return_value = b"%PDF-fake-content"
-        mock_response.__enter__ = lambda s: s
-        mock_response.__exit__ = MagicMock(return_value=False)
-        mock_urlopen.return_value = mock_response
+        mock_response.content = b"%PDF-fake-content"
+        mock_httpx = MagicMock()
+        mock_httpx.get.return_value = mock_response
+        mock_httpx_cls.return_value.__enter__ = lambda s: mock_httpx
+        mock_httpx_cls.return_value.__exit__ = MagicMock(return_value=False)
 
         result = ensure_in_cache("https://example.com/file.pdf", self._settings())
 
-        mock_urlopen.assert_called_once_with("https://example.com/file.pdf")
+        mock_httpx.get.assert_called_once_with("https://example.com/file.pdf")
         mock_blob.upload_from_string.assert_called_once_with(
             b"%PDF-fake-content", content_type="application/pdf"
         )
         assert result.present is True
 
     @patch("unredact.cache.storage.Client")
-    @patch("unredact.cache.urlopen")
-    def test_returns_correct_storage_url(self, mock_urlopen, mock_client_cls):
+    @patch("unredact.cache.httpx.Client")
+    def test_returns_correct_storage_url(self, mock_httpx_cls, mock_client_cls):
         mock_blob = MagicMock()
         mock_blob.exists.return_value = False
         mock_client_cls.return_value.bucket.return_value.blob.return_value = mock_blob
 
         mock_response = MagicMock()
-        mock_response.read.return_value = b"data"
-        mock_response.__enter__ = lambda s: s
-        mock_response.__exit__ = MagicMock(return_value=False)
-        mock_urlopen.return_value = mock_response
+        mock_response.content = b"data"
+        mock_httpx = MagicMock()
+        mock_httpx.get.return_value = mock_response
+        mock_httpx_cls.return_value.__enter__ = lambda s: mock_httpx
+        mock_httpx_cls.return_value.__exit__ = MagicMock(return_value=False)
 
         result = ensure_in_cache(
             "https://www.justice.gov/epstein/files/DataSet%209/EFTA00156482.pdf",

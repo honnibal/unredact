@@ -62,9 +62,9 @@ class TestFontsByUrl:
 
     @patch("unredact.api.fetch_pdf")
     def test_fetch_error_returns_502(self, mock_fetch, client):
-        from urllib.error import URLError
+        import httpx
 
-        mock_fetch.side_effect = URLError("connection refused")
+        mock_fetch.side_effect = httpx.RequestError("connection refused")
 
         resp = client.post(
             "/fonts/by-url",
