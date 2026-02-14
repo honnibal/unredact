@@ -1,396 +1,587 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Epstein Document Unredaction</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 24px; color: #1a1a1a; }
-  h1 { font-size: 1.3rem; margin-bottom: 20px; }
-  h2 { font-size: 1.1rem; margin: 24px 0 12px; color: #333; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Epstein Document Unredaction</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  .section { margin-bottom: 24px; padding: 16px; border: 1px solid #e0e0e0; border-radius: 6px; }
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px;
+      color: #1a1a1a;
+    }
 
-  .controls { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 12px; }
-  .controls label { font-size: 0.85rem; color: #555; display: block; margin-bottom: 2px; }
-  .controls select, .controls input[type="number"], .controls input[type="text"] {
-    padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem;
-  }
-  .controls select { min-width: 160px; }
-  .controls input[type="number"] { width: 64px; }
-  .controls input[type="text"] { min-width: 400px; }
-  .controls .checkbox-group { display: flex; align-items: center; gap: 4px; padding-bottom: 4px; }
-  .controls .checkbox-group input { margin: 0; }
+    h1 {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+    }
 
-  button {
-    padding: 8px 16px; border: none; border-radius: 4px; font-size: 0.9rem; cursor: pointer;
-    background: #4a90d9; color: #fff;
-  }
-  button:hover { background: #3a7bc8; }
-  button:disabled { background: #a0c4e8; cursor: default; }
-  button.secondary { background: #e8e8e8; color: #333; }
-  button.secondary:hover { background: #ddd; }
+    h2 {
+      font-size: 1.1rem;
+      margin: 24px 0 12px;
+      color: #333;
+    }
 
-  .input-row { display: flex; gap: 8px; margin-bottom: 8px; }
-  .input-row input[type="text"] {
-    flex: 1; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.95rem;
-  }
-  .input-row input[type="text"]:focus { outline: none; border-color: #4a90d9; }
+    .section {
+      margin-bottom: 24px;
+      padding: 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+    }
 
-  .paste-area { margin-bottom: 12px; display: none; }
-  .paste-area textarea {
-    width: 100%; height: 120px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;
-    font-size: 0.9rem; font-family: inherit; resize: vertical;
-  }
-  .paste-area .paste-actions { margin-top: 6px; display: flex; gap: 8px; }
+    .controls {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
 
-  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-  th { text-align: left; padding: 8px 10px; border-bottom: 2px solid #ddd; font-size: 0.8rem;
-       color: #555; user-select: none; }
-  td { padding: 6px 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-  td.num { font-variant-numeric: tabular-nums; text-align: right; }
-  td.remove-col { width: 32px; text-align: center; }
-  .remove-btn {
-    background: none; border: none; color: #aaa; cursor: pointer; font-size: 1.1rem;
-    padding: 0 4px; line-height: 1;
-  }
-  .remove-btn:hover { color: #e44; }
+    .controls label {
+      font-size: 0.85rem;
+      color: #555;
+      display: block;
+      margin-bottom: 2px;
+    }
 
-  .matches { font-size: 0.85rem; color: #2a6; }
-  .no-match { font-size: 0.85rem; color: #999; }
+    .controls select,
+    .controls input[type="number"],
+    .controls input[type="text"] {
+      padding: 6px 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
 
-  .status { font-size: 0.85rem; color: #666; padding: 8px 0; }
-  .status.error { color: #c33; }
-  .empty-state { color: #999; padding: 16px; text-align: center; font-size: 0.9rem; }
-</style>
+    .controls select {
+      min-width: 160px;
+    }
+
+    .controls input[type="number"] {
+      width: 64px;
+    }
+
+    .controls input[type="text"] {
+      min-width: 400px;
+    }
+
+    .controls .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding-bottom: 4px;
+    }
+
+    .controls .checkbox-group input {
+      margin: 0;
+    }
+
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      background: #4a90d9;
+      color: #fff;
+    }
+
+    button:hover {
+      background: #3a7bc8;
+    }
+
+    button:disabled {
+      background: #a0c4e8;
+      cursor: default;
+    }
+
+    button.secondary {
+      background: #e8e8e8;
+      color: #333;
+    }
+
+    button.secondary:hover {
+      background: #ddd;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .input-row input[type="text"] {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.95rem;
+    }
+
+    .input-row input[type="text"]:focus {
+      outline: none;
+      border-color: #4a90d9;
+    }
+
+    .paste-area {
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    .paste-area textarea {
+      width: 100%;
+      height: 120px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    .paste-area .paste-actions {
+      margin-top: 6px;
+      display: flex;
+      gap: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+
+    th {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 2px solid #ddd;
+      font-size: 0.8rem;
+      color: #555;
+      user-select: none;
+    }
+
+    td {
+      padding: 6px 10px;
+      border-bottom: 1px solid #eee;
+      font-size: 0.9rem;
+    }
+
+    td.num {
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    td.remove-col {
+      width: 32px;
+      text-align: center;
+    }
+
+    .remove-btn {
+      background: none;
+      border: none;
+      color: #aaa;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0 4px;
+      line-height: 1;
+    }
+
+    .remove-btn:hover {
+      color: #e44;
+    }
+
+    .matches {
+      font-size: 0.85rem;
+      color: #2a6;
+    }
+
+    .no-match {
+      font-size: 0.85rem;
+      color: #999;
+    }
+
+    .status {
+      font-size: 0.85rem;
+      color: #666;
+      padding: 8px 0;
+    }
+
+    .status.error {
+      color: #c33;
+    }
+
+    .empty-state {
+      color: #999;
+      padding: 16px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
+
 <body>
 
-<h1>Epstein Document Unredaction</h1>
+  <h1>Epstein Document Unredaction</h1>
 
-<!-- PDF URL section -->
-<div class="section">
-  <h2>1. Analyze PDF</h2>
-  <div class="controls">
-    <div style="flex:1">
-      <label for="pdf-url">PDF URL (justice.gov)</label>
-      <input type="text" id="pdf-url" placeholder="https://www.justice.gov/epstein/files/..." style="width:100%">
+  <!-- PDF URL section -->
+  <div class="section">
+    <h2>1. Analyze PDF</h2>
+    <div class="controls">
+      <div style="flex:1">
+        <label for="pdf-url">PDF URL (justice.gov)</label>
+        <input type="text" id="pdf-url" placeholder="https://www.justice.gov/epstein/files/..." style="width:100%">
+      </div>
+      <button id="analyze-btn" onclick="analyzePdf()">Analyze</button>
     </div>
-    <button id="analyze-btn" onclick="analyzePdf()">Analyze</button>
+    <div id="pdf-status" class="status"></div>
   </div>
-  <div id="pdf-status" class="status"></div>
-</div>
 
-<!-- Candidate names section -->
-<div class="section">
-  <h2>2. Candidate Names</h2>
-  <div class="controls">
-    <div>
-      <label for="font">Font</label>
-      <select id="font"></select>
+  <!-- Candidate names section -->
+  <div class="section">
+    <h2>2. Candidate Names</h2>
+    <div class="controls">
+      <div>
+        <label for="font">Font</label>
+        <select id="font"></select>
+      </div>
+      <div>
+        <label for="size">Size (pt)</label>
+        <input type="number" id="size" value="12" min="1" max="200">
+      </div>
+      <div>
+        <label for="tolerance">Tolerance (px)</label>
+        <input type="number" id="tolerance" value="3" min="0" max="50">
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="kerning" checked>
+        <label for="kerning">Kerning</label>
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="ligatures" checked>
+        <label for="ligatures">Ligatures</label>
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="uppercase">
+        <label for="uppercase">Force Uppercase</label>
+      </div>
     </div>
-    <div>
-      <label for="size">Size (pt)</label>
-      <input type="number" id="size" value="12" min="1" max="200">
+    <div class="input-row">
+      <input type="text" id="string-input" placeholder="Type a name and press Enter">
+      <button onclick="addFromInput()">Add</button>
+      <button class="secondary" onclick="togglePaste()">Paste list</button>
+      <button class="secondary" onclick="clearAllNames()">Clear all</button>
     </div>
-    <div>
-      <label for="tolerance">Tolerance (px)</label>
-      <input type="number" id="tolerance" value="3" min="0" max="50">
+    <div class="paste-area" id="paste-area">
+      <textarea id="paste-input" placeholder="Paste multiple names, one per line"></textarea>
+      <div class="paste-actions">
+        <button onclick="addFromPaste()">Add all</button>
+        <button class="secondary" onclick="togglePaste()">Cancel</button>
+      </div>
     </div>
-    <div class="checkbox-group">
-      <input type="checkbox" id="kerning" checked>
-      <label for="kerning">Kerning</label>
-    </div>
-    <div class="checkbox-group">
-      <input type="checkbox" id="ligatures" checked>
-      <label for="ligatures">Ligatures</label>
-    </div>
+    <table id="names-table" style="display:none">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th style="text-align:right">Width (px)</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="names-body"></tbody>
+    </table>
+    <div class="empty-state" id="names-empty">Add candidate names above</div>
   </div>
-  <div class="input-row">
-    <input type="text" id="string-input" placeholder="Type a name and press Enter">
-    <button onclick="addFromInput()">Add</button>
-    <button class="secondary" onclick="togglePaste()">Paste list</button>
-    <button class="secondary" onclick="clearAllNames()">Clear all</button>
+
+  <!-- Redaction matches section -->
+  <div class="section" id="redactions-section" style="display:none">
+    <h2>3. Redaction Matches</h2>
+    <div id="match-summary" class="status"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Page</th>
+          <th style="text-align:right">Box Width (px)</th>
+          <th>Matches</th>
+        </tr>
+      </thead>
+      <tbody id="redactions-body"></tbody>
+    </table>
   </div>
-  <div class="paste-area" id="paste-area">
-    <textarea id="paste-input" placeholder="Paste multiple names, one per line"></textarea>
-    <div class="paste-actions">
-      <button onclick="addFromPaste()">Add all</button>
-      <button class="secondary" onclick="togglePaste()">Cancel</button>
-    </div>
-  </div>
-  <table id="names-table" style="display:none">
-    <thead><tr><th>Name</th><th style="text-align:right">Width (px)</th><th></th></tr></thead>
-    <tbody id="names-body"></tbody>
-  </table>
-  <div class="empty-state" id="names-empty">Add candidate names above</div>
-</div>
 
-<!-- Redaction matches section -->
-<div class="section" id="redactions-section" style="display:none">
-  <h2>3. Redaction Matches</h2>
-  <div id="match-summary" class="status"></div>
-  <table>
-    <thead><tr><th>Page</th><th style="text-align:right">Box Width (px)</th><th>Matches</th></tr></thead>
-    <tbody id="redactions-body"></tbody>
-  </table>
-</div>
+  <script>
+    // --- State ---
+    const DEFAULT_NAMES = [
+      'Jeffrey Epstein',
+      'Ghislaine Maxwell',
+      'Alan Dershowitz',
+      'Bill Clinton',
+      'Donald Trump',
+      'Prince Andrew',
+      'Virginia Giuffre',
+      'Virginia Roberts',
+      'Jean-Luc Brunel',
+      'Sarah Kellen',
+      'Nadia Marcinkova',
+      'Les Wexner',
+      'Glenn Dubin',
+      'Eva Dubin',
+      'Bill Richardson',
+      'George Mitchell',
+      'Leon Black',
+      'Mort Zuckerman',
+      'Emmy Tayler',
+      'Lesley Groff',
+      'Adriana Ross',
+      'Juan Alessi',
+      'Alfredo Rodriguez',
+    ];
+    const candidates = [...DEFAULT_NAMES];
+    let candidateWidths = {};
+    let redactions = [];
+    let detectedFont = null;
+    let detectedSize = null;
 
-<script>
-// --- State ---
-const DEFAULT_NAMES = [
-  'Jeffrey Epstein',
-  'Ghislaine Maxwell',
-  'Alan Dershowitz',
-  'Bill Clinton',
-  'Donald Trump',
-  'Prince Andrew',
-  'Virginia Giuffre',
-  'Virginia Roberts',
-  'Jean-Luc Brunel',
-  'Sarah Kellen',
-  'Nadia Marcinkova',
-  'Les Wexner',
-  'Glenn Dubin',
-  'Eva Dubin',
-  'Bill Richardson',
-  'George Mitchell',
-  'Leon Black',
-  'Mort Zuckerman',
-  'Emmy Tayler',
-  'Lesley Groff',
-  'Adriana Ross',
-  'Juan Alessi',
-  'Alfredo Rodriguez',
-];
-const candidates = [...DEFAULT_NAMES];
-let candidateWidths = {};
-let redactions = [];
-let detectedFont = null;
-let detectedSize = null;
+    // --- DOM refs ---
+    const urlEl = document.getElementById('pdf-url');
+    const analyzeBtnEl = document.getElementById('analyze-btn');
+    const pdfStatusEl = document.getElementById('pdf-status');
+    const fontEl = document.getElementById('font');
+    const sizeEl = document.getElementById('size');
+    const toleranceEl = document.getElementById('tolerance');
+    const kerningEl = document.getElementById('kerning');
+    const ligaturesEl = document.getElementById('ligatures');
+    const uppercaseEl = document.getElementById('uppercase');
+    const inputEl = document.getElementById('string-input');
+    const pasteAreaEl = document.getElementById('paste-area');
+    const pasteInputEl = document.getElementById('paste-input');
+    const namesTableEl = document.getElementById('names-table');
+    const namesBodyEl = document.getElementById('names-body');
+    const namesEmptyEl = document.getElementById('names-empty');
+    const redactionsSectionEl = document.getElementById('redactions-section');
+    const redactionsBodyEl = document.getElementById('redactions-body');
+    const matchSummaryEl = document.getElementById('match-summary');
 
-// --- DOM refs ---
-const urlEl = document.getElementById('pdf-url');
-const analyzeBtnEl = document.getElementById('analyze-btn');
-const pdfStatusEl = document.getElementById('pdf-status');
-const fontEl = document.getElementById('font');
-const sizeEl = document.getElementById('size');
-const toleranceEl = document.getElementById('tolerance');
-const kerningEl = document.getElementById('kerning');
-const ligaturesEl = document.getElementById('ligatures');
-const inputEl = document.getElementById('string-input');
-const pasteAreaEl = document.getElementById('paste-area');
-const pasteInputEl = document.getElementById('paste-input');
-const namesTableEl = document.getElementById('names-table');
-const namesBodyEl = document.getElementById('names-body');
-const namesEmptyEl = document.getElementById('names-empty');
-const redactionsSectionEl = document.getElementById('redactions-section');
-const redactionsBodyEl = document.getElementById('redactions-body');
-const matchSummaryEl = document.getElementById('match-summary');
-
-// --- Init ---
-fetch('/fonts').then(r => r.json()).then(fonts => {
-  fonts.forEach(f => {
-    const opt = document.createElement('option');
-    opt.value = f;
-    opt.textContent = f;
-    fontEl.appendChild(opt);
-  });
-  if (fonts.includes('times new roman')) fontEl.value = 'times new roman';
-  // Calculate widths for pre-populated names
-  recalculate();
-});
-
-urlEl.addEventListener('keydown', e => {
-  if (e.key === 'Enter') { e.preventDefault(); analyzePdf(); }
-});
-inputEl.addEventListener('keydown', e => {
-  if (e.key === 'Enter') { e.preventDefault(); addFromInput(); }
-});
-fontEl.addEventListener('change', recalculate);
-sizeEl.addEventListener('change', recalculate);
-toleranceEl.addEventListener('change', renderMatches);
-kerningEl.addEventListener('change', recalculate);
-ligaturesEl.addEventListener('change', recalculate);
-
-// --- PDF analysis ---
-async function analyzePdf() {
-  const url = urlEl.value.trim();
-  if (!url) return;
-
-  analyzeBtnEl.disabled = true;
-  pdfStatusEl.className = 'status';
-  pdfStatusEl.textContent = 'Fetching and analyzing PDF...';
-  redactions = [];
-
-  try {
-    // Fetch redactions and font info in parallel
-    const [redactResp, fontResp] = await Promise.all([
-      fetch('/redactions/by-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-      }),
-      fetch('/fonts/by-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-      }),
-    ]);
-
-    if (!redactResp.ok) {
-      const err = await redactResp.json();
-      throw new Error(err.detail || `HTTP ${redactResp.status}`);
-    }
-    if (!fontResp.ok) {
-      const err = await fontResp.json();
-      throw new Error(err.detail || `HTTP ${fontResp.status}`);
-    }
-
-    const redactData = await redactResp.json();
-    const fontData = await fontResp.json();
-
-    redactions = redactData.redactions;
-
-    // Auto-detect dominant font from spans
-    const fontCounts = {};
-    fontData.spans.forEach(s => {
-      const key = `${s.font.matched_font || ''}|${s.font.size}`;
-      fontCounts[key] = (fontCounts[key] || 0) + 1;
+    // --- Init ---
+    fetch('/fonts').then(r => r.json()).then(fonts => {
+      fonts.forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = f;
+        opt.textContent = f;
+        fontEl.appendChild(opt);
+      });
+      if (fonts.includes('times new roman')) fontEl.value = 'times new roman';
+      // Calculate widths for pre-populated names
+      recalculate();
     });
-    const dominant = Object.entries(fontCounts).sort((a, b) => b[1] - a[1])[0];
-    if (dominant) {
-      const [fontName, size] = dominant[0].split('|');
-      if (fontName && fontEl.querySelector(`option[value="${fontName}"]`)) {
-        fontEl.value = fontName;
-        detectedFont = fontName;
-      }
-      if (size) {
-        sizeEl.value = size;
-        detectedSize = parseInt(size);
+
+    urlEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); analyzePdf(); }
+    });
+    inputEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); addFromInput(); }
+    });
+    fontEl.addEventListener('change', recalculate);
+    sizeEl.addEventListener('change', recalculate);
+    toleranceEl.addEventListener('change', renderMatches);
+    kerningEl.addEventListener('change', recalculate);
+    ligaturesEl.addEventListener('change', recalculate);
+    uppercaseEl.addEventListener('change', recalculate);
+
+    // --- PDF analysis ---
+    async function analyzePdf() {
+      const url = urlEl.value.trim();
+      if (!url) return;
+
+      analyzeBtnEl.disabled = true;
+      pdfStatusEl.className = 'status';
+      pdfStatusEl.textContent = 'Fetching and analyzing PDF...';
+      redactions = [];
+
+      try {
+        // Fetch redactions and font info in parallel
+        const [redactResp, fontResp] = await Promise.all([
+          fetch('/redactions/by-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url }),
+          }),
+          fetch('/fonts/by-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url }),
+          }),
+        ]);
+
+        if (!redactResp.ok) {
+          const err = await redactResp.json();
+          throw new Error(err.detail || `HTTP ${redactResp.status}`);
+        }
+        if (!fontResp.ok) {
+          const err = await fontResp.json();
+          throw new Error(err.detail || `HTTP ${fontResp.status}`);
+        }
+
+        const redactData = await redactResp.json();
+        const fontData = await fontResp.json();
+
+        redactions = redactData.redactions;
+
+        // Auto-detect dominant font from spans
+        const fontCounts = {};
+        fontData.spans.forEach(s => {
+          const key = `${s.font.matched_font || ''}|${s.font.size}`;
+          fontCounts[key] = (fontCounts[key] || 0) + 1;
+        });
+        const dominant = Object.entries(fontCounts).sort((a, b) => b[1] - a[1])[0];
+        if (dominant) {
+          const [fontName, size] = dominant[0].split('|');
+          if (fontName && fontEl.querySelector(`option[value="${fontName}"]`)) {
+            fontEl.value = fontName;
+            detectedFont = fontName;
+          }
+          if (size) {
+            sizeEl.value = size;
+            detectedSize = parseInt(size);
+          }
+        }
+
+        pdfStatusEl.textContent = `Found ${redactions.length} redaction(s). ` +
+          `Dominant font: ${detectedFont || 'unknown'} ${detectedSize || '?'}pt. ` +
+          `${fontData.spans.length} text spans across ${new Set(fontData.spans.map(s => s.page)).size} page(s).`;
+        redactionsSectionEl.style.display = '';
+
+        recalculate();
+      } catch (e) {
+        pdfStatusEl.className = 'status error';
+        pdfStatusEl.textContent = `Error: ${e.message}`;
+        redactionsSectionEl.style.display = 'none';
+      } finally {
+        analyzeBtnEl.disabled = false;
       }
     }
 
-    pdfStatusEl.textContent = `Found ${redactions.length} redaction(s). ` +
-      `Dominant font: ${detectedFont || 'unknown'} ${detectedSize || '?'}pt. ` +
-      `${fontData.spans.length} text spans across ${new Set(fontData.spans.map(s => s.page)).size} page(s).`;
-    redactionsSectionEl.style.display = '';
+    // --- Candidate names ---
+    function addFromInput() {
+      const val = inputEl.value.trim();
+      if (!val) return;
+      if (!candidates.includes(val)) candidates.push(val);
+      inputEl.value = '';
+      inputEl.focus();
+      recalculate();
+    }
 
-    recalculate();
-  } catch (e) {
-    pdfStatusEl.className = 'status error';
-    pdfStatusEl.textContent = `Error: ${e.message}`;
-    redactionsSectionEl.style.display = 'none';
-  } finally {
-    analyzeBtnEl.disabled = false;
-  }
-}
+    function togglePaste() {
+      const visible = pasteAreaEl.style.display !== 'none';
+      pasteAreaEl.style.display = visible ? 'none' : 'block';
+      if (!visible) pasteInputEl.focus();
+    }
 
-// --- Candidate names ---
-function addFromInput() {
-  const val = inputEl.value.trim();
-  if (!val) return;
-  if (!candidates.includes(val)) candidates.push(val);
-  inputEl.value = '';
-  inputEl.focus();
-  recalculate();
-}
+    function addFromPaste() {
+      const lines = pasteInputEl.value.split('\n').map(s => s.trim()).filter(Boolean);
+      lines.forEach(l => { if (!candidates.includes(l)) candidates.push(l); });
+      pasteInputEl.value = '';
+      pasteAreaEl.style.display = 'none';
+      recalculate();
+    }
 
-function togglePaste() {
-  const visible = pasteAreaEl.style.display !== 'none';
-  pasteAreaEl.style.display = visible ? 'none' : 'block';
-  if (!visible) pasteInputEl.focus();
-}
+    function removeCandidate(idx) {
+      candidates.splice(idx, 1);
+      recalculate();
+    }
 
-function addFromPaste() {
-  const lines = pasteInputEl.value.split('\n').map(s => s.trim()).filter(Boolean);
-  lines.forEach(l => { if (!candidates.includes(l)) candidates.push(l); });
-  pasteInputEl.value = '';
-  pasteAreaEl.style.display = 'none';
-  recalculate();
-}
+    function clearAllNames() {
+      candidates.length = 0;
+      recalculate();
+    }
 
-function removeCandidate(idx) {
-  candidates.splice(idx, 1);
-  recalculate();
-}
+    async function recalculate() {
+      if (candidates.length === 0) {
+        candidateWidths = {};
+        renderNames();
+        renderMatches();
+        return;
+      }
 
-function clearAllNames() {
-  candidates.length = 0;
-  recalculate();
-}
+      const forceUpper = uppercaseEl.checked;
+      const stringsToSend = forceUpper ? candidates.map(c => c.toUpperCase()) : candidates;
 
-async function recalculate() {
-  if (candidates.length === 0) {
-    candidateWidths = {};
-    renderNames();
-    renderMatches();
-    return;
-  }
+      const resp = await fetch('/widths', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          strings: stringsToSend,
+          font: fontEl.value,
+          size: parseInt(sizeEl.value) || 12,
+          kerning: kerningEl.checked,
+          ligatures: ligaturesEl.checked,
+        }),
+      });
+      const data = await resp.json();
+      candidateWidths = {};
 
-  const resp = await fetch('/widths', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      strings: candidates,
-      font: fontEl.value,
-      size: parseInt(sizeEl.value) || 12,
-      kerning: kerningEl.checked,
-      ligatures: ligaturesEl.checked,
-    }),
-  });
-  const data = await resp.json();
-  candidateWidths = {};
-  data.results.forEach(r => { candidateWidths[r.text] = r.width; });
-  renderNames();
-  renderMatches();
-}
+      // Store widths keyed by the original candidate name from the 'candidates' array
+      // We use the index to match them up since the backend preserves order.
+      data.results.forEach((r, i) => {
+        candidateWidths[candidates[i]] = r.width;
+      });
 
-// --- Rendering ---
-function renderNames() {
-  const hasNames = candidates.length > 0;
-  namesTableEl.style.display = hasNames ? '' : 'none';
-  namesEmptyEl.style.display = hasNames ? 'none' : '';
+      renderNames();
+      renderMatches();
+    }
 
-  namesBodyEl.innerHTML = '';
-  candidates.forEach((name, i) => {
-    const tr = document.createElement('tr');
-    const w = candidateWidths[name];
-    tr.innerHTML = `
-      <td>${esc(name)}</td>
+    // --- Rendering ---
+    function renderNames() {
+      const hasNames = candidates.length > 0;
+      namesTableEl.style.display = hasNames ? '' : 'none';
+      namesEmptyEl.style.display = hasNames ? 'none' : '';
+
+      namesBodyEl.innerHTML = '';
+      candidates.forEach((name, i) => {
+        const tr = document.createElement('tr');
+        const w = candidateWidths[name];
+        const display = uppercaseEl.checked ? name.toUpperCase() : name;
+        tr.innerHTML = `
+      <td>${esc(display)}</td>
       <td class="num">${w !== undefined ? w : '...'}</td>
       <td class="remove-col"><button class="remove-btn" onclick="removeCandidate(${i})">&times;</button></td>
     `;
-    namesBodyEl.appendChild(tr);
-  });
-}
+        namesBodyEl.appendChild(tr);
+      });
+    }
 
-function renderMatches() {
-  if (redactions.length === 0) {
-    redactionsSectionEl.style.display = 'none';
-    return;
-  }
-  redactionsSectionEl.style.display = '';
+    function renderMatches() {
+      if (redactions.length === 0) {
+        redactionsSectionEl.style.display = 'none';
+        return;
+      }
+      redactionsSectionEl.style.display = '';
 
-  const tol = parseFloat(toleranceEl.value) || 0;
-  let totalMatched = 0;
+      const tol = parseFloat(toleranceEl.value) || 0;
+      let totalMatched = 0;
 
-  redactionsBodyEl.innerHTML = '';
-  redactions.forEach(r => {
-    const boxWidth = r.width;
-    const matches = candidates.filter(name => {
-      const w = candidateWidths[name];
-      return w !== undefined && Math.abs(w - boxWidth) <= tol;
-    });
+      redactionsBodyEl.innerHTML = '';
+      redactions.forEach(r => {
+        const boxWidth = r.width;
+        const matches = candidates.filter(name => {
+          const w = candidateWidths[name];
+          return w !== undefined && Math.abs(w - boxWidth) <= tol;
+        });
 
-    if (matches.length > 0) totalMatched++;
+        if (matches.length > 0) totalMatched++;
 
-    const tr = document.createElement('tr');
-    const matchHtml = matches.length > 0
-      ? `<span class="matches">${matches.map(esc).join(', ')}</span>`
-      : `<span class="no-match">no matches</span>`;
-    tr.innerHTML = `
+        const tr = document.createElement('tr');
+        const matchHtml = matches.length > 0
+          ? `<span class="matches">${matches.map(m => esc(uppercaseEl.checked ? m.toUpperCase() : m)).join(', ')}</span>`
+          : `<span class="no-match">no matches</span>`;
+        tr.innerHTML = `
       <td class="num">${r.page}</td>
       <td class="num">${boxWidth.toFixed(0)}</td>
       <td>${matchHtml}</td>
@@ -409,4 +600,5 @@ function esc(s) {
 }
 </script>
 </body>
+
 </html>
