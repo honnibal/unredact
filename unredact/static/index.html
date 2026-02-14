@@ -586,19 +586,19 @@
       <td class="num">${boxWidth.toFixed(0)}</td>
       <td>${matchHtml}</td>
     `;
-    redactionsBodyEl.appendChild(tr);
-  });
+        redactionsBodyEl.appendChild(tr);
+      });
 
-  matchSummaryEl.textContent = `${totalMatched} of ${redactions.length} redactions matched ` +
-    `(tolerance: ${tol}px, font: ${fontEl.value} ${sizeEl.value}pt)`;
-}
+      matchSummaryEl.textContent = `${totalMatched} of ${redactions.length} redactions matched ` +
+        `(tolerance: ${tol}px, font: ${fontEl.value} ${sizeEl.value}pt)`;
+    }
 
-function esc(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
-</script>
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+  </script>
 </body>
 
 </html>
